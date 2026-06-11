@@ -312,21 +312,18 @@ class _NamePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Center(
-          child: Icon(Icons.waving_hand_outlined,
-              size: 110, color: AppColors.secondary),
-        ),
-        const SizedBox(height: 32),
+        SizedBox(height: keyboardOpen ? 8 : 32),
         Text('¿Cómo te llamas?',
             style: AppTextStyles.h1.copyWith(color: AppColors.primary)),
-        const SizedBox(height: 16),
+        SizedBox(height: keyboardOpen ? 8 : 16),
         Text('Usaremos tu nombre para saludarte cada día.',
             style: AppTextStyles.body),
-        const SizedBox(height: 24),
+        SizedBox(height: keyboardOpen ? 12 : 24),
         TextField(
           controller: controller,
           textCapitalization: TextCapitalization.words,
