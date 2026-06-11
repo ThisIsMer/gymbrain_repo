@@ -116,18 +116,40 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
   List<_Token> get _placed =>
       _placedIds.map((id) => _allTokens.firstWhere((t) => t.id == id)).toList();
 
+  // Ancho que ocuparía una palabra en una sola línea con el estilo del chip.
+  double _measureWordWidth(String word) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: word,
+        style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700),
+      ),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return painter.width;
+  }
+
   // Reparte las palabras colocadas en hasta 3 filas, manteniendo el orden.
-  List<List<_Token>> get _placedRows {
+  // Salta de fila si la fila ya está completa o si, al añadir la palabra,
+  // alguna de las palabras de la fila dejaría de caber en una sola línea.
+  List<List<_Token>> _buildPlacedRows(double maxWidth) {
     final tokens = _placed;
     if (tokens.isEmpty) return [];
-    const maxPerRow = 4;
-    final rowCount =
-        min(3, (tokens.length / maxPerRow).ceil()).clamp(1, 3);
-    final perRow = (tokens.length / rowCount).ceil();
-    return [
-      for (int i = 0; i < tokens.length; i += perRow)
-        tokens.sublist(i, min(i + perRow, tokens.length)),
-    ];
+    const maxRows = 3;
+    const chipOverhead = 26.0; // padding + bordes del chip.
+    final rows = <List<_Token>>[<_Token>[]];
+    for (final t in tokens) {
+      final current = rows.last;
+      final itemWidth = maxWidth / (current.length + 1) - chipOverhead;
+      final fits = _measureWordWidth(t.word) <= itemWidth &&
+          current.every((c) => _measureWordWidth(c.word) <= itemWidth);
+      if (current.isNotEmpty && !fits && rows.length < maxRows) {
+        rows.add([t]);
+      } else {
+        current.add(t);
+      }
+    }
+    return rows;
   }
 
   void _place(_Token t) {
@@ -374,26 +396,31 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
                   child: Text('Toca las palabras para construir la frase.',
                       style: AppTextStyles.caption),
                 )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (final row in _placedRows)
-                      Row(
-                        children: [
-                          for (final t in row)
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(2),
-                                child: _WordChip(
-                                  word: t.word,
-                                  state: _ChipState.filled,
-                                  onTap: () => _unplace(t),
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final rows = _buildPlacedRows(constraints.maxWidth);
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final row in rows)
+                          Row(
+                            children: [
+                              for (final t in row)
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(2),
+                                    child: _WordChip(
+                                      word: t.word,
+                                      state: _ChipState.filled,
+                                      onTap: () => _unplace(t),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                        ],
-                      ),
-                  ],
+                            ],
+                          ),
+                      ],
+                    );
+                  },
                 ),
         ),
         const SizedBox(height: 16),
