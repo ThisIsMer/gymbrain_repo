@@ -113,9 +113,6 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
 
   // --- Construcción ---------------------------------------------------------
 
-  List<_Token> get _available =>
-      _allTokens.where((t) => !_placedIds.contains(t.id)).toList();
-
   List<_Token> get _placed =>
       _placedIds.map((id) => _allTokens.firstWhere((t) => t.id == id)).toList();
 
@@ -350,25 +347,31 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
         // Zona de construcción.
         Container(
           width: double.infinity,
-          constraints: const BoxConstraints(minHeight: 88),
-          padding: const EdgeInsets.all(12),
+          constraints: const BoxConstraints(minHeight: 64),
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppDimens.cardRadius),
             border: Border.all(color: AppColors.hairline),
           ),
           child: _placed.isEmpty
-              ? Text('Toca las palabras para construir la frase.',
-                  style: AppTextStyles.caption)
-              : Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+              ? Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Text('Toca las palabras para construir la frase.',
+                      style: AppTextStyles.caption),
+                )
+              : Row(
                   children: [
                     for (final t in _placed)
-                      _WordChip(
-                        word: t.word,
-                        filled: true,
-                        onTap: () => _unplace(t),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(2),
+                          child: _WordChip(
+                            word: t.word,
+                            state: _ChipState.filled,
+                            onTap: () => _unplace(t),
+                          ),
+                        ),
                       ),
                   ],
                 ),
@@ -385,14 +388,20 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
                   spacing: gap,
                   runSpacing: gap,
                   children: [
-                    for (final t in _available)
+                    for (final t in _allTokens)
                       SizedBox(
                         width: itemWidth,
-                        child: _WordChip(
-                          word: t.word,
-                          filled: false,
-                          onTap: () => _place(t),
-                        ),
+                        child: _placedIds.contains(t.id)
+                            ? _WordChip(
+                                word: t.word,
+                                state: _ChipState.used,
+                                onTap: () => _unplace(t),
+                              )
+                            : _WordChip(
+                                word: t.word,
+                                state: _ChipState.normal,
+                                onTap: () => _place(t),
+                              ),
                       ),
                   ],
                 );
@@ -429,17 +438,39 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
   }
 }
 
+enum _ChipState { normal, used, filled }
+
 class _WordChip extends StatelessWidget {
   final String word;
-  final bool filled;
+  final _ChipState state;
   final VoidCallback onTap;
   const _WordChip(
-      {required this.word, required this.filled, required this.onTap});
+      {required this.word, required this.state, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final Color background;
+    final Color foreground;
+    final Color border;
+    switch (state) {
+      case _ChipState.filled:
+        background = AppColors.primary;
+        foreground = AppColors.onPrimary;
+        border = AppColors.primary;
+        break;
+      case _ChipState.used:
+        background = AppColors.hairline;
+        foreground = AppColors.textMain.withValues(alpha: 0.4);
+        border = AppColors.hairline;
+        break;
+      case _ChipState.normal:
+        background = AppColors.surface;
+        foreground = AppColors.primary;
+        border = AppColors.primary;
+        break;
+    }
     return Material(
-      color: filled ? AppColors.primary : AppColors.surface,
+      color: background,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
@@ -450,13 +481,13 @@ class _WordChip extends StatelessWidget {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.primary, width: 1),
+            border: Border.all(color: border, width: 1),
           ),
           child: Text(
             word,
             textAlign: TextAlign.center,
             style: AppTextStyles.body.copyWith(
-              color: filled ? AppColors.onPrimary : AppColors.primary,
+              color: foreground,
               fontWeight: FontWeight.w700,
             ),
           ),
