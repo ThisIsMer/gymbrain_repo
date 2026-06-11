@@ -1,0 +1,36 @@
+name: gymbrain
+description: GymBrain — prototipo de estimulación cognitiva para mayores de 65 años.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.2
+  shared_preferences: ^2.2.3
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.4
+  flutter_lints: ^4.0.0
+  flutter_native_splash: ^2.4.7
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/branding/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/branding/app_icon.png"
+  remove_alpha_ios: true
+  # Opcional para Android moderno (icono adaptativo):
+  adaptive_icon_background: "#1B3A6B"
+  adaptive_icon_foreground: "assets/branding/app_icon.png"
