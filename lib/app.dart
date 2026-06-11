@@ -51,7 +51,14 @@ class GymBrainApp extends StatelessWidget {
           data: mq.copyWith(
             textScaler: TextScaler.linear(settings.textScaleFactor),
           ),
-          child: child ?? const SizedBox.shrink(),
+          child: Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (event) {
+              debugPrint('[haptic] onPointerDown at ${event.position}');
+              settings.hapticTap();
+            },
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
       home: const SplashScreen(),

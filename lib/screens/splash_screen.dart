@@ -55,13 +55,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 fit: BoxFit.contain, // muestra la imagen entera, no la recorta
               ),
               const SizedBox(height: 16),
-              Text(
-                'GymBrain',
-                style: AppTextStyles.h1.copyWith(
-                  color: AppColors.onPrimary,
-                  fontSize: 40,
-                ),
-              ),
               const SizedBox(height: 24),
               const SizedBox(
                 width: 36,

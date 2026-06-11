@@ -116,8 +116,9 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
   List<_Token> get _placed =>
       _placedIds.map((id) => _allTokens.firstWhere((t) => t.id == id)).toList();
 
-  // Ancho que ocuparía una palabra en una sola línea con el estilo del chip.
-  double _measureWordWidth(String word) {
+  // Ancho que ocuparía una palabra en una sola línea con el estilo del chip,
+  // teniendo en cuenta el tamaño de letra elegido en ajustes.
+  double _measureWordWidth(String word, TextScaler textScaler) {
     final painter = TextPainter(
       text: TextSpan(
         text: word,
@@ -125,6 +126,7 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
       ),
       maxLines: 1,
       textDirection: TextDirection.ltr,
+      textScaler: textScaler,
     )..layout();
     return painter.width;
   }
@@ -132,7 +134,7 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
   // Reparte las palabras colocadas en hasta 3 filas, manteniendo el orden.
   // Salta de fila si la fila ya está completa o si, al añadir la palabra,
   // alguna de las palabras de la fila dejaría de caber en una sola línea.
-  List<List<_Token>> _buildPlacedRows(double maxWidth) {
+  List<List<_Token>> _buildPlacedRows(double maxWidth, TextScaler textScaler) {
     final tokens = _placed;
     if (tokens.isEmpty) return [];
     const maxRows = 3;
@@ -141,8 +143,9 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
     for (final t in tokens) {
       final current = rows.last;
       final itemWidth = maxWidth / (current.length + 1) - chipOverhead;
-      final fits = _measureWordWidth(t.word) <= itemWidth &&
-          current.every((c) => _measureWordWidth(c.word) <= itemWidth);
+      final fits = _measureWordWidth(t.word, textScaler) <= itemWidth &&
+          current.every(
+              (c) => _measureWordWidth(c.word, textScaler) <= itemWidth);
       if (current.isNotEmpty && !fits && rows.length < maxRows) {
         rows.add([t]);
       } else {
@@ -398,7 +401,8 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
                 )
               : LayoutBuilder(
                   builder: (context, constraints) {
-                    final rows = _buildPlacedRows(constraints.maxWidth);
+                    final rows = _buildPlacedRows(
+                        constraints.maxWidth, MediaQuery.textScalerOf(context));
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [

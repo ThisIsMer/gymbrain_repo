@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:vibration/vibration.dart';
 
 import '../models/app_settings.dart';
 import 'storage_service.dart';
@@ -56,6 +57,23 @@ class SettingsProvider extends ChangeNotifier {
 
   void hapticLight() {
     if (_settings.vibrationEnabled) HapticFeedback.lightImpact();
+  }
+
+  /// Vibración genérica para cualquier toque sobre un elemento interactuable.
+  /// Usa el motor de vibración directamente (paquete `vibration`), que no
+  /// depende del ajuste de "vibración táctil" del sistema como sí ocurre
+  /// con los HapticFeedback.* (performHapticFeedback).
+  void hapticTap() {
+    if (!_settings.vibrationEnabled) return;
+    debugPrint('[haptic] hapticTap() -> Vibration.vibrate');
+    Vibration.vibrate(duration: 150, amplitude: 255).then((_) {
+      debugPrint('[haptic] vibrate() completed');
+    }).catchError((Object e) {
+      debugPrint('[haptic] vibrate() error: $e');
+    });
+    Vibration.hasVibrator().then((v) => debugPrint('[haptic] hasVibrator=$v'));
+    Vibration.hasAmplitudeControl()
+        .then((v) => debugPrint('[haptic] hasAmplitudeControl=$v'));
   }
 
   void hapticSuccess() {
