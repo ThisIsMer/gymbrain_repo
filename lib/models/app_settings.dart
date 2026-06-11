@@ -52,31 +52,37 @@ extension TextSizeOptionX on TextSizeOption {
 class AppSettings {
   TextSizeOption textSize;
   bool vibrationEnabled;
+  String userName;
 
   AppSettings({
     this.textSize = TextSizeOption.normal,
     this.vibrationEnabled = true,
+    this.userName = '',
   });
 
   AppSettings copyWith({
     TextSizeOption? textSize,
     bool? vibrationEnabled,
+    String? userName,
   }) {
     return AppSettings(
       textSize: textSize ?? this.textSize,
       vibrationEnabled: vibrationEnabled ?? this.vibrationEnabled,
+      userName: userName ?? this.userName,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'textSize': textSize.key,
         'vibrationEnabled': vibrationEnabled,
+        'userName': userName,
       };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) {
     return AppSettings(
       textSize: TextSizeOptionX.fromKey(json['textSize'] as String?),
       vibrationEnabled: json['vibrationEnabled'] as bool? ?? true,
+      userName: json['userName'] as String? ?? '',
     );
   }
 

@@ -7,9 +7,9 @@ import '../models/streak_data.dart';
 import '../services/progress_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/app_card.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/primary_button.dart';
-import '../widgets/progress_indicator_text.dart';
 import 'daily_result_screen.dart';
 
 /// Preguntas diarias (§8). 3 preguntas; "No me acuerdo" no rompe la racha.
@@ -72,6 +72,12 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
         ? 'Has cuidado tu memoria un día más. $tip'
         : 'Lo importante es la constancia. $tip';
 
+    final today = _progress.todayIso();
+    final hits = _progress
+        .loadDailyAnswers()
+        .where((a) => a.dayIso == today && a.remembered)
+        .length;
+
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -79,6 +85,8 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
           streakDays: streak.current,
           isBest: isBest,
           message: message,
+          hits: hits,
+          total: _questions.length,
         ),
       ),
     );
@@ -93,18 +101,45 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
     final canConfirm = _controller.text.trim().isNotEmpty;
 
     return AppScaffold(
-      title: 'Preguntas diarias',
+      title: 'Racha diaria',
+      actions: [
+        Text(
+          '${_index + 1} / ${_questions.length}',
+          style: AppTextStyles.caption,
+        ),
+      ],
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ProgressIndicatorText(
-              current: _index + 1,
-              total: _questions.length,
-              prefix: 'Pregunta',
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: (_index + 1) / _questions.length,
+                minHeight: 8,
+                backgroundColor: AppColors.hairline,
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
             ),
-            const SizedBox(height: 28),
-            Text(_current.text, style: AppTextStyles.h2),
+            const SizedBox(height: 24),
+            AppCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'PREGUNTA ${_index + 1}',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textMain.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(_current.text, style: AppTextStyles.h2),
+                ],
+              ),
+            ),
             if (hint != null) ...[
               const SizedBox(height: 12),
               Container(
@@ -117,6 +152,13 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
               ),
             ],
             const SizedBox(height: 24),
+            Text(
+              'Tu respuesta',
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textMain.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 8),
             TextField(
               controller: _controller,
               minLines: 2,
@@ -144,13 +186,13 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
             ),
             const SizedBox(height: 24),
             PrimaryButton(
-              label: 'Confirmar',
+              label: 'Continuar',
               icon: Icons.check,
               onPressed: canConfirm ? () => _save(remembered: true) : null,
             ),
             const SizedBox(height: 12),
             PrimaryButton(
-              label: 'No me acuerdo',
+              label: 'No lo sé',
               icon: Icons.help_outline,
               outlined: true,
               onPressed: () => _save(remembered: false),

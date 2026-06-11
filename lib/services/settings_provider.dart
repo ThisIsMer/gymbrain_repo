@@ -17,6 +17,7 @@ class SettingsProvider extends ChangeNotifier {
   AppSettings get settings => _settings;
   TextSizeOption get textSize => _settings.textSize;
   bool get vibrationEnabled => _settings.vibrationEnabled;
+  String get userName => _settings.userName;
 
   /// Factor aplicado al `TextScaler` global (§3.2).
   double get textScaleFactor => _settings.textSize.factor;
@@ -42,6 +43,13 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setVibration(bool enabled) async {
     if (_settings.vibrationEnabled == enabled) return;
     _settings = _settings.copyWith(vibrationEnabled: enabled);
+    notifyListeners();
+    await _persist();
+  }
+
+  Future<void> setUserName(String name) async {
+    if (_settings.userName == name) return;
+    _settings = _settings.copyWith(userName: name);
     notifyListeners();
     await _persist();
   }

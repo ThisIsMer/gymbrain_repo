@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/game_difficulty.dart';
 import '../services/progress_service.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_dimens.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/app_card.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/bar_chart_simple.dart';
 
 /// Estadísticas (Anexo 8). Tres zonas verticales:
 ///   1) Dato protagonista: racha actual y máxima (dos números grandes).
 ///   2) Evolución por actividad: un minigráfico por demo (últimas 7 sesiones).
-///   3) Datos de contexto: total de partidas y mejor resultado por actividad.
+///   3) Datos de contexto: total de partidas.
 /// Sin diagnósticos ni comparaciones con terceros: solo la evolución personal.
 class StatsScreen extends StatelessWidget {
   const StatsScreen({super.key});
@@ -64,8 +63,7 @@ class StatsScreen extends StatelessWidget {
     if (allMemory.isNotEmpty) {
       final best =
           allMemory.reduce((a, b) => a.timeSeconds <= b.timeSeconds ? a : b);
-      final nivel = GameDifficultyX.fromKey(best.difficulty).label;
-      bestMemory = '${_mmss(best.timeSeconds)} ($nivel)';
+      bestMemory = _mmss(best.timeSeconds);
     }
 
     String bestSentence = '—';
@@ -91,153 +89,215 @@ class StatsScreen extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _StreakNumber(
+                child: _StreakStatCard(
+                  icon: Icons.local_fire_department,
+                  iconBg: AppColors.secondary.withValues(alpha: 0.14),
+                  iconColor: AppColors.secondary,
                   value: streak.current,
                   label: 'Racha actual',
-                  icon: Icons.local_fire_department_outlined,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _StreakNumber(
-                  value: streak.max,
-                  label: 'Racha máxima',
+                child: _StreakStatCard(
                   icon: Icons.emoji_events_outlined,
+                  iconBg: AppColors.primary.withValues(alpha: 0.08),
+                  iconColor: AppColors.primary,
+                  value: streak.max,
+                  label: 'Mejor racha',
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           // --- Zona media: evolución por actividad ---
-          BarChartSimple(
-            title: 'Memory',
-            subtitle: 'Tiempo en segundos · menos es mejor',
+          const _SectionLabel('EVOLUCIÓN POR JUEGO'),
+          const SizedBox(height: 12),
+          _GameStatCard(
+            icon: Icons.grid_view_outlined,
+            title: 'Memoria visual',
+            subtitle: 'Mejor tiempo',
+            value: bestMemory,
             data: memoryData,
           ),
-          const SizedBox(height: 28),
-          BarChartSimple(
-            title: 'Reconstruye la frase',
-            subtitle: 'Palabras bien colocadas (%) · más es mejor',
+          const SizedBox(height: 16),
+          _GameStatCard(
+            icon: Icons.short_text_outlined,
+            title: 'Simón dice',
+            subtitle: 'Mejor acierto',
+            value: bestSentence,
             data: sentenceData,
             fixedMax: 100, // métrica en %: eje fijo 0–100 (Anexo 8 §4.1)
           ),
-          const SizedBox(height: 28),
-          BarChartSimple(
+          const SizedBox(height: 16),
+          _GameStatCard(
+            icon: Icons.compare_arrows_outlined,
             title: 'Mayor o menor',
-            subtitle: 'Tiempo medio en ms · menos es mejor',
+            subtitle: 'Mejor reacción',
+            value: bestNumber,
             data: numberData,
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
 
           // --- Zona inferior: datos de contexto ---
-          _ContextCard(
-            totalGames: totalGames,
-            bestMemory: bestMemory,
-            bestSentence: bestSentence,
-            bestNumber: bestNumber,
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-}
-
-/// Número grande de racha con icono y etiqueta (información nunca solo color).
-class _StreakNumber extends StatelessWidget {
-  final int value;
-  final String label;
-  final IconData icon;
-
-  const _StreakNumber({
-    required this.value,
-    required this.label,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppDimens.cardBorder,
-        border: Border.all(color: AppColors.hairline),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: AppColors.secondary, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            '$value',
-            style: const TextStyle(
-              fontSize: 48, // dato protagonista, mínimo 48 sp (Anexo 8 §4.3)
-              fontWeight: FontWeight.w700,
-              color: AppColors.primary,
+          AppCard(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text('Partidas completadas', style: AppTextStyles.body),
+                ),
+                Text(
+                  '$totalGames',
+                  style: AppTextStyles.h2.copyWith(color: AppColors.primary),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.caption,
-          ),
+          const SizedBox(height: 8),
         ],
       ),
     );
   }
 }
 
-/// Tarjeta de datos de contexto: total de partidas y mejor marca por actividad.
-class _ContextCard extends StatelessWidget {
-  final int totalGames;
-  final String bestMemory;
-  final String bestSentence;
-  final String bestNumber;
+/// Etiqueta de sección en mayúsculas (gris, espaciada).
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel(this.label);
 
-  const _ContextCard({
-    required this.totalGames,
-    required this.bestMemory,
-    required this.bestSentence,
-    required this.bestNumber,
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: AppTextStyles.caption.copyWith(
+        color: AppColors.textMain.withValues(alpha: 0.5),
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+      ),
+    );
+  }
+}
+
+/// Tarjeta de racha: icono + número grande ("X días") + etiqueta.
+class _StreakStatCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final int value;
+  final String label;
+
+  const _StreakStatCard({
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.value,
+    required this.label,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: AppDimens.cardBorder,
-        border: Border.all(color: AppColors.hairline),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _row('Partidas completadas', '$totalGames'),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: iconColor, size: 22),
+          ),
           const SizedBox(height: 12),
-          _row('Mejor Memory', bestMemory),
-          const SizedBox(height: 12),
-          _row('Mejor Reconstruye la frase', bestSentence),
-          const SizedBox(height: 12),
-          _row('Mejor Mayor o menor', bestNumber),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text('$value', style: AppTextStyles.h1),
+              const SizedBox(width: 6),
+              Text(value == 1 ? 'día' : 'días', style: AppTextStyles.body),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: AppTextStyles.caption),
         ],
       ),
     );
   }
+}
 
-  Widget _row(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: Text(label, style: AppTextStyles.caption)),
-        const SizedBox(width: 12),
-        Text(
-          value,
-          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700),
-        ),
-      ],
+/// Tarjeta por actividad: icono + título/subtítulo + mejor marca + gráfico.
+class _GameStatCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String value;
+  final List<BarDatum> data;
+  final double? fixedMax;
+
+  const _GameStatCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.data,
+    this.fixedMax,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTextStyles.h2,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      subtitle,
+                      style: AppTextStyles.caption,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                value,
+                textAlign: TextAlign.end,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.h2.copyWith(color: AppColors.primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          BarChartSimple(data: data, fixedMax: fixedMax),
+        ],
+      ),
     );
   }
 }

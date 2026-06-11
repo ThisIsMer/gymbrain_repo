@@ -12,6 +12,7 @@ import '../services/settings_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/activity_top_bar.dart';
 import '../widgets/feedback_badge.dart';
 import '../widgets/pause_overlay.dart';
 import '../widgets/primary_button.dart';
@@ -28,7 +29,7 @@ class _Token {
   const _Token(this.id, this.word);
 }
 
-const int _totalSentences = 10;
+const int _totalSentences = 5;
 
 /// Demo 2 — Reconstruye la frase (§6).
 class SentenceGameScreen extends StatefulWidget {
@@ -131,13 +132,13 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
     return painter.width;
   }
 
-  // Reparte las palabras colocadas en hasta 3 filas, manteniendo el orden.
-  // Salta de fila si la fila ya está completa o si, al añadir la palabra,
-  // alguna de las palabras de la fila dejaría de caber en una sola línea.
-  List<List<_Token>> _buildPlacedRows(double maxWidth, TextScaler textScaler) {
-    final tokens = _placed;
+  // Reparte una lista de palabras en filas, manteniendo el orden. Salta de
+  // fila si la fila ya está completa o si, al añadir la palabra, alguna de
+  // las palabras de la fila dejaría de caber en una sola línea.
+  List<List<_Token>> _buildRows(
+      List<_Token> tokens, double maxWidth, TextScaler textScaler,
+      {int maxRows = 4}) {
     if (tokens.isEmpty) return [];
-    const maxRows = 3;
     const chipOverhead = 26.0; // padding + bordes del chip.
     final rows = <List<_Token>>[<_Token>[]];
     for (final t in tokens) {
@@ -239,7 +240,7 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => ActivityResultScreen(
-          title: 'Reconstruye la frase',
+          title: 'Simón dice',
           metrics: [
             'Frases correctas: $_correctSentences de $_totalSentences',
             'Palabras bien colocadas: ${session.wordsCorrectPercent.round()}%',
@@ -286,27 +287,16 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ProgressIndicatorText(
-                          current: _sentenceIndex + 1,
-                          total: _totalSentences,
-                          prefix: 'Frase',
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _openPause,
-                        icon: const Icon(Icons.pause_circle_outline),
-                        color: AppColors.primary,
-                        iconSize: AppDimens.minIcon,
-                        tooltip: 'Pausa',
-                        constraints: const BoxConstraints(
-                          minWidth: AppDimens.minTouch,
-                          minHeight: AppDimens.minTouch,
-                        ),
-                      ),
-                    ],
+                  ActivityTopBar(
+                    title: 'Simón dice',
+                    onBack: () => Navigator.of(context).pop(),
+                    onPause: _openPause,
+                  ),
+                  const SizedBox(height: 12),
+                  ProgressIndicatorText(
+                    current: _sentenceIndex + 1,
+                    total: _totalSentences,
+                    prefix: 'Frase',
                   ),
                   const SizedBox(height: 12),
                   Expanded(child: _buildPhase()),
@@ -395,13 +385,18 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
           ),
           child: _placed.isEmpty
               ? Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Text('Toca las palabras para construir la frase.',
-                      style: AppTextStyles.caption),
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    'Toca las palabras de abajo en el orden correcto…',
+                    style: AppTextStyles.body.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.textMain.withValues(alpha: 0.4),
+                    ),
+                  ),
                 )
               : LayoutBuilder(
                   builder: (context, constraints) {
-                    final rows = _buildPlacedRows(
+                    final rows = _buildRows(_placed,
                         constraints.maxWidth, MediaQuery.textScalerOf(context));
                     return Column(
                       mainAxisSize: MainAxisSize.min,
@@ -428,31 +423,38 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
                 ),
         ),
         const SizedBox(height: 16),
-        // Cuadrícula de opciones (máx 2 columnas).
+        // Banco de palabras, repartido en filas de 2-3 palabras.
         Expanded(
           child: SingleChildScrollView(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                const gap = 10.0;
-                final itemWidth = (constraints.maxWidth - gap) / 2;
-                return Wrap(
-                  spacing: gap,
-                  runSpacing: gap,
+                final rows = _buildRows(_allTokens, constraints.maxWidth,
+                    MediaQuery.textScalerOf(context),
+                    maxRows: _allTokens.length);
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    for (final t in _allTokens)
-                      SizedBox(
-                        width: itemWidth,
-                        child: _placedIds.contains(t.id)
-                            ? _WordChip(
-                                word: t.word,
-                                state: _ChipState.used,
-                                onTap: () => _unplace(t),
-                              )
-                            : _WordChip(
-                                word: t.word,
-                                state: _ChipState.normal,
-                                onTap: () => _place(t),
+                    for (final row in rows)
+                      Row(
+                        children: [
+                          for (final t in row)
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(2),
+                                child: _placedIds.contains(t.id)
+                                    ? _WordChip(
+                                        word: t.word,
+                                        state: _ChipState.used,
+                                        onTap: () => _unplace(t),
+                                      )
+                                    : _WordChip(
+                                        word: t.word,
+                                        state: _ChipState.normal,
+                                        onTap: () => _place(t),
+                                      ),
                               ),
+                            ),
+                        ],
                       ),
                   ],
                 );
@@ -462,10 +464,25 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
         ),
         const SizedBox(height: 12),
         if (showConfirm)
-          PrimaryButton(
-            label: 'Confirmar',
-            icon: Icons.check,
-            onPressed: _placed.isEmpty ? null : _confirm,
+          Row(
+            children: [
+              Expanded(
+                child: PrimaryButton(
+                  label: 'Borrar todo',
+                  outlined: true,
+                  onPressed:
+                      _placed.isEmpty ? null : () => setState(_placedIds.clear),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: PrimaryButton(
+                  label: 'Comprobar',
+                  icon: Icons.check,
+                  onPressed: _placed.isEmpty ? null : _confirm,
+                ),
+              ),
+            ],
           ),
       ],
     );

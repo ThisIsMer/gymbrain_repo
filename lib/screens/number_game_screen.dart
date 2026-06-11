@@ -10,6 +10,7 @@ import '../services/settings_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/activity_top_bar.dart';
 import '../widgets/pause_overlay.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/progress_indicator_text.dart';
@@ -316,27 +317,16 @@ class _NumberGameScreenState extends State<NumberGameScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ProgressIndicatorText(
-                          current: _trialIndex + 1,
-                          total: _totalTrials,
-                          prefix: 'Ronda',
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: _openPause,
-                        icon: const Icon(Icons.pause_circle_outline),
-                        color: AppColors.primary,
-                        iconSize: AppDimens.minIcon,
-                        tooltip: 'Pausa',
-                        constraints: const BoxConstraints(
-                          minWidth: AppDimens.minTouch,
-                          minHeight: AppDimens.minTouch,
-                        ),
-                      ),
-                    ],
+                  ActivityTopBar(
+                    title: 'Mayor o menor',
+                    onBack: () => Navigator.of(context).pop(),
+                    onPause: _openPause,
+                  ),
+                  const SizedBox(height: 12),
+                  ProgressIndicatorText(
+                    current: _trialIndex + 1,
+                    total: _totalTrials,
+                    prefix: 'Ronda',
                   ),
                   const SizedBox(height: 12),
                   Expanded(child: _buildPhase()),
@@ -488,31 +478,22 @@ class _NumberButton extends StatelessWidget {
             border: Border.all(color: border, width: 2),
           ),
           alignment: Alignment.center,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Text(
-                '$value',
-                style: TextStyle(
-                  fontSize: 56,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
-                ),
-              ),
-              if (showFeedback)
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Icon(
-                    feedbackCorrect
-                        ? Icons.check_circle_outline
-                        : Icons.cancel_outlined,
-                    color: AppColors.onPrimary,
-                    size: 32,
+          child: showFeedback
+              ? Icon(
+                  feedbackCorrect
+                      ? Icons.check_circle_outline
+                      : Icons.cancel_outlined,
+                  color: AppColors.onPrimary,
+                  size: 56,
+                )
+              : Text(
+                  '$value',
+                  style: TextStyle(
+                    fontSize: 56,
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
                   ),
                 ),
-            ],
-          ),
         ),
       ),
     );

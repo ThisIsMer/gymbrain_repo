@@ -21,7 +21,7 @@ class BarDatum {
 ///   (eje 0–100). Si es null, la escala se ajusta al valor mayor de la ventana
 ///   (métricas de tiempo, sin máximo natural).
 class BarChartSimple extends StatelessWidget {
-  final String title;
+  final String? title;
   final List<BarDatum> data; // ya recortado a <= slots por el llamante
   final String? subtitle;
   final String emptyMessage;
@@ -30,7 +30,7 @@ class BarChartSimple extends StatelessWidget {
 
   const BarChartSimple({
     super.key,
-    required this.title,
+    this.title,
     required this.data,
     this.subtitle,
     this.emptyMessage = 'Todavía no has jugado a esta actividad.',
@@ -43,12 +43,14 @@ class BarChartSimple extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: AppTextStyles.h2),
-        if (subtitle != null) ...[
-          const SizedBox(height: 4),
-          Text(subtitle!, style: AppTextStyles.caption),
+        if (title != null) ...[
+          Text(title!, style: AppTextStyles.h2),
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            Text(subtitle!, style: AppTextStyles.caption),
+          ],
+          const SizedBox(height: 12),
         ],
-        const SizedBox(height: 12),
         if (data.isEmpty)
           Text(emptyMessage, style: AppTextStyles.body)
         else

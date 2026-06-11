@@ -7,6 +7,7 @@ import '../services/settings_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/app_card.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/primary_button.dart';
 import 'onboarding_screen.dart';
@@ -24,53 +25,51 @@ class SettingsScreen extends StatelessWidget {
       title: 'Ajustes',
       body: ListView(
         children: [
-          // --- Tamaño de texto -------------------------------------------
-          Text('Tamaño del texto', style: AppTextStyles.h2),
-          const SizedBox(height: 12),
-          Column(
-            children: [
-              for (final option in TextSizeOption.values) ...[
-                _TextSizeOptionTile(
-                  option: option,
-                  selected: settings.textSize == option,
-                  onTap: () => settings.setTextSize(option),
-                ),
-                const SizedBox(height: 10),
-              ],
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // --- Vibración --------------------------------------------------
-          Text('Vibración', style: AppTextStyles.h2),
+          // --- Accesibilidad ----------------------------------------------
+          const _SectionLabel('ACCESIBILIDAD'),
           const SizedBox(height: 8),
-          Material(
-            color: AppColors.surface,
-            elevation: AppDimens.cardElevation,
-            borderRadius: AppDimens.cardBorder,
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Vibración al tocar y al acertar o fallar',
-                      style: AppTextStyles.body,
-                    ),
-                  ),
-                  Switch(
-                    value: settings.vibrationEnabled,
-                    onChanged: (v) => settings.setVibration(v),
-                  ),
-                ],
-              ),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Tamaño de texto', style: AppTextStyles.h2),
+                const SizedBox(height: 8),
+                Text('Afecta a todas las pantallas',
+                    style: AppTextStyles.caption),
+                const SizedBox(height: 12),
+                _TextSizeSegmented(
+                  selected: settings.textSize,
+                  onChanged: (option) => settings.setTextSize(option),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 24),
 
-          // --- Cómo se juega ---------------------------------------------
-          Text('Ayuda', style: AppTextStyles.h2),
+          // --- Sonido -------------------------------------------------------
+          const _SectionLabel('SONIDO'),
+          const SizedBox(height: 8),
+          AppCard(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Vibración al pulsar',
+                    style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Switch(
+                  value: settings.vibrationEnabled,
+                  activeThumbColor: AppColors.success,
+                  onChanged: (v) => settings.setVibration(v),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // --- Ayuda ----------------------------------------------------------
+          const _SectionLabel('AYUDA'),
           const SizedBox(height: 8),
           PrimaryButton(
             label: 'Cómo se juega',
@@ -84,19 +83,35 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // --- Restablecer progreso --------------------------------------
-          Text('Datos', style: AppTextStyles.h2),
+          // --- Datos ----------------------------------------------------------
+          const _SectionLabel('DATOS'),
           const SizedBox(height: 8),
-          PrimaryButton(
-            label: 'Restablecer progreso',
-            icon: Icons.delete_outline,
-            outlined: true,
-            onPressed: () => _confirmReset(context),
+          AppCard(
+            onTap: () => _confirmReset(context),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Restablecer progreso',
+                        style: AppTextStyles.h2.copyWith(color: AppColors.error),
+                      ),
+                      const SizedBox(height: 2),
+                      Text('Borra racha, historial y nivel',
+                          style: AppTextStyles.caption),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.error),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 24),
           Text(
-            'Se borrarán tu racha, tus respuestas y tus resultados. '
-            'No se puede deshacer.',
+            'GymBrain · Versión 1.0',
+            textAlign: TextAlign.center,
             style: AppTextStyles.caption,
           ),
         ],
@@ -152,14 +167,61 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-/// Fila seleccionable de tamaño de texto. El estado seleccionado se marca con
-/// icono (✓) y borde, nunca solo por color. Muestra una vista previa "Aa".
-class _TextSizeOptionTile extends StatelessWidget {
+/// Etiqueta de sección en mayúsculas (gris, espaciada).
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: AppTextStyles.caption.copyWith(
+        color: AppColors.textMain.withValues(alpha: 0.5),
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.2,
+      ),
+    );
+  }
+}
+
+/// Control segmentado Pequeño / Normal / Grande para el tamaño de texto.
+class _TextSizeSegmented extends StatelessWidget {
+  final TextSizeOption selected;
+  final ValueChanged<TextSizeOption> onChanged;
+
+  const _TextSizeSegmented({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          for (final option in TextSizeOption.values)
+            Expanded(
+              child: _TextSizeSegment(
+                option: option,
+                selected: option == selected,
+                onTap: () => onChanged(option),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TextSizeSegment extends StatelessWidget {
   final TextSizeOption option;
   final bool selected;
   final VoidCallback onTap;
 
-  const _TextSizeOptionTile({
+  const _TextSizeSegment({
     required this.option,
     required this.selected,
     required this.onTap,
@@ -168,49 +230,22 @@ class _TextSizeOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected
-          ? AppColors.primary.withValues(alpha: 0.08)
-          : AppColors.surface,
-      elevation: AppDimens.cardElevation,
-      borderRadius: AppDimens.cardBorder,
+      color: selected ? AppColors.primary : Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
       child: InkWell(
-        borderRadius: AppDimens.cardBorder,
+        borderRadius: BorderRadius.circular(10),
         onTap: onTap,
         child: Container(
           constraints: const BoxConstraints(minHeight: AppDimens.minTouch),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: AppDimens.cardBorder,
-            border: Border.all(
-              color: selected ? AppColors.primary : AppColors.hairline,
-              width: selected ? 2 : 1,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Text(
+            option.label,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.body.copyWith(
+              fontWeight: FontWeight.w700,
+              color: selected ? AppColors.onPrimary : AppColors.textMain,
             ),
-          ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 44,
-                child: Text(
-                  'Aa',
-                  style: TextStyle(
-                    fontSize: 18 * option.factor,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textMain,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(option.label, style: AppTextStyles.body),
-              ),
-              Icon(
-                selected
-                    ? Icons.check_circle_outline
-                    : Icons.radio_button_unchecked,
-                color: selected ? AppColors.primary : AppColors.hairline,
-                size: AppDimens.minIcon,
-              ),
-            ],
           ),
         ),
       ),

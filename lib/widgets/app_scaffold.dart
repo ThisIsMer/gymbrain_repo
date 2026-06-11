@@ -10,6 +10,7 @@ class AppScaffold extends StatelessWidget {
   final String title;
   final Widget body;
   final bool showBack;
+  final VoidCallback? onBack;
   final List<Widget>? actions;
   final Widget? bottom; // contenido fijo inferior (p.ej. disclaimer)
 
@@ -18,6 +19,7 @@ class AppScaffold extends StatelessWidget {
     required this.title,
     required this.body,
     this.showBack = true,
+    this.onBack,
     this.actions,
     this.bottom,
   });
@@ -39,7 +41,8 @@ class AppScaffold extends StatelessWidget {
                 children: [
                   if (showBack)
                     IconButton(
-                      onPressed: () => Navigator.of(context).maybePop(),
+                      onPressed:
+                          onBack ?? () => Navigator.of(context).maybePop(),
                       icon: const Icon(Icons.arrow_back),
                       color: AppColors.primary,
                       iconSize: AppDimens.minIcon,

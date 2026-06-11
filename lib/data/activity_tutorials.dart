@@ -20,7 +20,7 @@ const String kTutDaily = 'daily';
 /// Demo 1 — Memory (§5).
 final ActivityTutorial memoryTutorial = ActivityTutorial(
   id: kTutMemory,
-  title: 'Memory',
+  title: 'Memoria visual',
   pages: [
     TutorialPage(
       icon: Icons.grid_view_outlined,
@@ -48,7 +48,7 @@ final ActivityTutorial memoryTutorial = ActivityTutorial(
 /// Demo 2 — Reconstruye la frase (§6).
 final ActivityTutorial sentenceTutorial = ActivityTutorial(
   id: kTutSentence,
-  title: 'Reconstruye la frase',
+  title: 'Simón dice',
   pages: [
     const TutorialPage(
       icon: Icons.menu_book_outlined,

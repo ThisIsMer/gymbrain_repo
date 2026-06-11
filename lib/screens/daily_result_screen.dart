@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/app_card.dart';
 import '../widgets/app_scaffold.dart';
 import '../widgets/primary_button.dart';
 
@@ -10,54 +11,82 @@ class DailyResultScreen extends StatelessWidget {
   final int streakDays;
   final bool isBest;
   final String message;
+  final int hits;
+  final int total;
 
   const DailyResultScreen({
     super.key,
     required this.streakDays,
     required this.isBest,
     required this.message,
+    required this.hits,
+    required this.total,
   });
 
   @override
   Widget build(BuildContext context) {
+    final perfect = total > 0 && hits == total;
+    final title = perfect ? '¡Excelente!' : '¡Buen trabajo!';
+    final subtitle = perfect
+        ? 'Has acertado todas las preguntas de hoy. Vuelve mañana para '
+            'mantener tu racha.'
+        : message;
+
     return PopScope(
       canPop: false,
       child: AppScaffold(
-        title: 'Preguntas diarias',
-        showBack: false,
+        title: 'Racha diaria',
+        showBack: true,
+        onBack: () => Navigator.of(context).popUntil((r) => r.isFirst),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(height: 8),
-            const Center(
-              child: Icon(Icons.local_fire_department,
-                  size: 96, color: AppColors.secondary),
-            ),
-            const SizedBox(height: 16),
-            Center(
-              child: Text(
-                '¡Racha de $streakDays ${streakDays == 1 ? 'día' : 'días'}!',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.h1.copyWith(color: AppColors.primary),
-              ),
-            ),
-            if (isBest) ...[
-              const SizedBox(height: 10),
-              Center(
-                child: Text(
-                  '¡Tu mejor racha hasta ahora!',
-                  style: AppTextStyles.h2.copyWith(color: AppColors.secondary),
-                ),
-              ),
-            ],
             const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(16),
+            Center(
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: const BoxDecoration(
+                  color: AppColors.success,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check, color: AppColors.onPrimary, size: 48),
               ),
-              child: Text(message, style: AppTextStyles.body),
+            ),
+            const SizedBox(height: 24),
+            Text(title, textAlign: TextAlign.center, style: AppTextStyles.h1),
+            const SizedBox(height: 12),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textMain.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 28),
+            AppCard(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _StatColumn(
+                      value: '$hits/$total',
+                      label: 'ACIERTOS',
+                      color: AppColors.success,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 56,
+                    child: VerticalDivider(color: AppColors.hairline, width: 1),
+                  ),
+                  const Expanded(
+                    child: _StatColumn(
+                      value: '+1',
+                      label: 'DÍA DE RACHA',
+                      color: AppColors.secondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
             const Spacer(),
             PrimaryButton(
@@ -69,6 +98,35 @@ class DailyResultScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _StatColumn extends StatelessWidget {
+  final String value;
+  final String label;
+  final Color color;
+
+  const _StatColumn({required this.value, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: AppTextStyles.h1.copyWith(color: color, fontSize: 32),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            color: AppColors.textMain.withValues(alpha: 0.5),
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ],
     );
   }
 }

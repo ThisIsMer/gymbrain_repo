@@ -13,6 +13,7 @@ import '../services/settings_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/activity_top_bar.dart';
 import '../widgets/pause_overlay.dart';
 import 'activity_result_screen.dart';
 import 'activity_tutorial_screen.dart';
@@ -118,7 +119,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
         b.state = _CardState.matched;
       });
       _pairsFound++;
-      await Future<void>.delayed(const Duration(milliseconds: 600));
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
       _seenPositions..add(a.position)..add(b.position);
       _afterTurn();
     } else {
@@ -132,7 +133,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
         a.state = _CardState.fail;
         b.state = _CardState.fail;
       });
-      await Future<void>.delayed(const Duration(milliseconds: 900));
+      await Future<void>.delayed(const Duration(milliseconds: 1800));
       if (!mounted) return;
       setState(() {
         a.state = _CardState.down;
@@ -184,7 +185,7 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => ActivityResultScreen(
-          title: 'Memory',
+          title: 'Memoria visual',
           metrics: metrics,
           outcome: outcome,
           message: progress.messageFor(outcome),
@@ -245,14 +246,33 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
               ),
               child: Column(
                 children: [
-                  _TopBar(
-                    progress: 'Parejas: $_pairsFound de ${widget.difficulty.pairs}',
+                  ActivityTopBar(
+                    title: 'Memoria visual',
+                    onBack: () => Navigator.of(context).pop(),
                     onPause: _openPause,
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    'Toca dos tarjetas para encontrar parejas iguales.',
-                    style: AppTextStyles.body,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text('Encuentra las parejas', style: AppTextStyles.h2),
+                      ),
+                      Text(
+                        '$_pairsFound de ${widget.difficulty.pairs}',
+                        style: AppTextStyles.caption,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: _pairsFound / widget.difficulty.pairs,
+                      minHeight: 8,
+                      backgroundColor: AppColors.hairline,
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Expanded(child: _buildGrid()),
@@ -287,35 +307,6 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
         card: _cards[i],
         onTap: () => _onTap(i),
       ),
-    );
-  }
-}
-
-class _TopBar extends StatelessWidget {
-  final String progress;
-  final VoidCallback onPause;
-  const _TopBar({required this.progress, required this.onPause});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(progress,
-              style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700)),
-        ),
-        IconButton(
-          onPressed: onPause,
-          icon: const Icon(Icons.pause_circle_outline),
-          color: AppColors.primary,
-          iconSize: AppDimens.minIcon,
-          tooltip: 'Pausa',
-          constraints: const BoxConstraints(
-            minWidth: AppDimens.minTouch,
-            minHeight: AppDimens.minTouch,
-          ),
-        ),
-      ],
     );
   }
 }

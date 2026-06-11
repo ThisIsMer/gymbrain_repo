@@ -37,10 +37,28 @@ class PauseOverlay extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Center(
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.pause, color: AppColors.primary, size: 32),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 'Pausa',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.h1.copyWith(color: AppColors.primary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Tu progreso se ha guardado',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.caption,
               ),
               const SizedBox(height: 20),
               PrimaryButton(
@@ -63,11 +81,15 @@ class PauseOverlay extends StatelessWidget {
                 onPressed: onSettings,
               ),
               const SizedBox(height: 12),
-              PrimaryButton(
-                label: 'Volver al menú',
-                icon: Icons.home_outlined,
-                outlined: true,
-                onPressed: onExitToMenu,
+              Center(
+                child: TextButton(
+                  onPressed: onExitToMenu,
+                  child: Text(
+                    'Volver al menú',
+                    style: AppTextStyles.button
+                        .copyWith(color: AppColors.error),
+                  ),
+                ),
               ),
             ],
           ),

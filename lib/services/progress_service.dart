@@ -114,6 +114,13 @@ class ProgressService {
     );
   }
 
+  /// Nº de preguntas diarias ya respondidas hoy (0..3).
+  int answeredTodayCount() {
+    final today = todayIso();
+    final count = loadDailyAnswers().where((a) => a.dayIso == today).length;
+    return count.clamp(0, 3);
+  }
+
   /// Profundidad temporal de las preguntas de hoy (§8.2). Cap a 3.
   int currentDepth() {
     final consec = loadStreak().consecutiveDays;
