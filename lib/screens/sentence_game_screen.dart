@@ -116,6 +116,20 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
   List<_Token> get _placed =>
       _placedIds.map((id) => _allTokens.firstWhere((t) => t.id == id)).toList();
 
+  // Reparte las palabras colocadas en hasta 3 filas, manteniendo el orden.
+  List<List<_Token>> get _placedRows {
+    final tokens = _placed;
+    if (tokens.isEmpty) return [];
+    const maxPerRow = 4;
+    final rowCount =
+        min(3, (tokens.length / maxPerRow).ceil()).clamp(1, 3);
+    final perRow = (tokens.length / rowCount).ceil();
+    return [
+      for (int i = 0; i < tokens.length; i += perRow)
+        tokens.sublist(i, min(i + perRow, tokens.length)),
+    ];
+  }
+
   void _place(_Token t) {
     if (_phase != _Phase.build) return;
     context.read<SettingsProvider>().hapticLight();
@@ -360,18 +374,24 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
                   child: Text('Toca las palabras para construir la frase.',
                       style: AppTextStyles.caption),
                 )
-              : Row(
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    for (final t in _placed)
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(2),
-                          child: _WordChip(
-                            word: t.word,
-                            state: _ChipState.filled,
-                            onTap: () => _unplace(t),
-                          ),
-                        ),
+                    for (final row in _placedRows)
+                      Row(
+                        children: [
+                          for (final t in row)
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(2),
+                                child: _WordChip(
+                                  word: t.word,
+                                  state: _ChipState.filled,
+                                  onTap: () => _unplace(t),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                   ],
                 ),
