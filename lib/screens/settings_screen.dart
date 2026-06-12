@@ -161,8 +161,9 @@ class SettingsScreen extends StatelessWidget {
     await settings.resetToDefaults();
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Progreso restablecido.')),
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+      (route) => false,
     );
   }
 }

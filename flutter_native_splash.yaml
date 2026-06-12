@@ -3,6 +3,6 @@ flutter_native_splash:
   image: assets/branding/app_icon.png
   android_12:
     color: "#1B3A6B"
-    image: assets/branding/app_icon.png
+    image: assets/branding/app_icon_splash.png
   android: true
   ios: true

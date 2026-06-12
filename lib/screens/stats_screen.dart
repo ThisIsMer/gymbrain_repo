@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../services/progress_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_dimens.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_scaffold.dart';
@@ -10,11 +11,20 @@ import '../widgets/bar_chart_simple.dart';
 
 /// Estadísticas (Anexo 8). Tres zonas verticales:
 ///   1) Dato protagonista: racha actual y máxima (dos números grandes).
-///   2) Evolución por actividad: un minigráfico por demo (últimas 7 sesiones).
+///   2) Evolución por actividad: un minigráfico, con flechas para alternar
+///      entre las tres demos (Anexo 8 §4.2; sustituye el swipe por
+///      controles táctiles explícitos, WCAG 2.5.7).
 ///   3) Datos de contexto: total de partidas.
 /// Sin diagnósticos ni comparaciones con terceros: solo la evolución personal.
-class StatsScreen extends StatelessWidget {
+class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
+
+  @override
+  State<StatsScreen> createState() => _StatsScreenState();
+}
+
+class _StatsScreenState extends State<StatsScreen> {
+  int _gameIndex = 0;
 
   /// Toma como mucho los últimos [maxN] elementos, en orden cronológico.
   static List<T> _lastN<T>(List<T> list, int maxN) {
@@ -81,6 +91,33 @@ class StatsScreen extends StatelessWidget {
       bestNumber = '${best.round()} ms';
     }
 
+    // Las tres demos, para alternar con las flechas Anterior/Siguiente.
+    final games = [
+      _GameStatCard(
+        icon: Icons.grid_view_outlined,
+        title: 'Memoria visual',
+        subtitle: 'Mejor tiempo',
+        value: bestMemory,
+        data: memoryData,
+      ),
+      _GameStatCard(
+        icon: Icons.short_text_outlined,
+        title: 'Simón dice',
+        subtitle: 'Mejor acierto',
+        value: bestSentence,
+        data: sentenceData,
+        fixedMax: 100, // métrica en %: eje fijo 0–100 (Anexo 8 §4.1)
+      ),
+      _GameStatCard(
+        icon: Icons.compare_arrows_outlined,
+        title: 'Mayor o menor',
+        subtitle: 'Mejor reacción',
+        value: bestNumber,
+        data: numberData,
+      ),
+    ];
+    final currentGame = games[_gameIndex];
+
     return AppScaffold(
       title: 'Estadísticas',
       body: ListView(
@@ -111,51 +148,89 @@ class StatsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // --- Zona media: evolución por actividad ---
+          // --- Zona media: evolución por actividad (una demo a la vez) ---
           const _SectionLabel('EVOLUCIÓN POR JUEGO'),
           const SizedBox(height: 12),
-          _GameStatCard(
-            icon: Icons.grid_view_outlined,
-            title: 'Memoria visual',
-            subtitle: 'Mejor tiempo',
-            value: bestMemory,
-            data: memoryData,
-          ),
-          const SizedBox(height: 16),
-          _GameStatCard(
-            icon: Icons.short_text_outlined,
-            title: 'Simón dice',
-            subtitle: 'Mejor acierto',
-            value: bestSentence,
-            data: sentenceData,
-            fixedMax: 100, // métrica en %: eje fijo 0–100 (Anexo 8 §4.1)
-          ),
-          const SizedBox(height: 16),
-          _GameStatCard(
-            icon: Icons.compare_arrows_outlined,
-            title: 'Mayor o menor',
-            subtitle: 'Mejor reacción',
-            value: bestNumber,
-            data: numberData,
-          ),
+          currentGame,
           const SizedBox(height: 24),
 
-          // --- Zona inferior: datos de contexto ---
-          AppCard(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text('Partidas completadas', style: AppTextStyles.body),
+          // --- Zona inferior: datos de contexto + flechas para cambiar demo ---
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _NavArrowButton(
+                icon: Icons.chevron_left,
+                tooltip: 'Demo anterior',
+                onPressed: () => setState(() {
+                  _gameIndex = (_gameIndex - 1 + games.length) % games.length;
+                }),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AppCard(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text('Partidas completadas',
+                            style: AppTextStyles.body),
+                      ),
+                      Text(
+                        '$totalGames',
+                        style:
+                            AppTextStyles.h2.copyWith(color: AppColors.primary),
+                      ),
+                    ],
+                  ),
                 ),
-                Text(
-                  '$totalGames',
-                  style: AppTextStyles.h2.copyWith(color: AppColors.primary),
-                ),
-              ],
+              ),
+              const SizedBox(width: 8),
+              _NavArrowButton(
+                icon: Icons.chevron_right,
+                tooltip: 'Demo siguiente',
+                onPressed: () => setState(() {
+                  _gameIndex = (_gameIndex + 1) % games.length;
+                }),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              '${_gameIndex + 1} / ${games.length}',
+              style: AppTextStyles.caption.copyWith(fontSize: 16),
             ),
           ),
           const SizedBox(height: 8),
         ],
+      ),
+    );
+  }
+}
+
+/// Flecha grande para alternar entre demos (alternativa táctil al swipe,
+/// WCAG 2.5.7) con área mínima 48x48 (WCAG 2.5.8).
+class _NavArrowButton extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  const _NavArrowButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      iconSize: AppDimens.minIcon,
+      color: AppColors.primary,
+      tooltip: tooltip,
+      constraints: const BoxConstraints(
+        minWidth: AppDimens.minTouch,
+        minHeight: AppDimens.minTouch,
       ),
     );
   }
@@ -171,6 +246,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       label,
       style: AppTextStyles.caption.copyWith(
+        fontSize: 16, // mínimo accesible (WCAG 2.2)
         color: AppColors.textMain.withValues(alpha: 0.5),
         fontWeight: FontWeight.w700,
         letterSpacing: 1.2,
@@ -197,32 +273,45 @@ class _StreakStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(12),
+    return Semantics(
+      label: '$label: $value ${value == 1 ? 'día' : 'días'}',
+      container: true,
+      child: AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ExcludeSemantics(
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
             ),
-            child: Icon(icon, color: iconColor, size: 22),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text('$value', style: AppTextStyles.h1),
-              const SizedBox(width: 6),
-              Text(value == 1 ? 'día' : 'días', style: AppTextStyles.body),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(label, style: AppTextStyles.caption),
-        ],
+            const SizedBox(height: 12),
+            ExcludeSemantics(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text('$value', style: AppTextStyles.h1),
+                  const SizedBox(width: 6),
+                  Text(value == 1 ? 'día' : 'días', style: AppTextStyles.body),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+            ExcludeSemantics(
+              child: Text(
+                label,
+                style: AppTextStyles.caption.copyWith(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -255,14 +344,16 @@ class _GameStatCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
+              ExcludeSemantics(
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: AppColors.primary, size: 18),
                 ),
-                child: Icon(icon, color: AppColors.primary, size: 18),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -277,7 +368,7 @@ class _GameStatCard extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
-                      style: AppTextStyles.caption,
+                      style: AppTextStyles.caption.copyWith(fontSize: 16),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

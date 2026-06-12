@@ -38,24 +38,50 @@ class BarChartSimple extends StatelessWidget {
     this.fixedMax,
   });
 
+  /// Tamaño mínimo de fuente accesible (WCAG 2.2): 16 px, en vez del
+  /// caption (14 px) usado en el resto de la app.
+  static TextStyle get _caption16 =>
+      AppTextStyles.caption.copyWith(fontSize: 16);
+
+  /// Descripción textual del gráfico para lectores de pantalla, que resume
+  /// los valores mostrados sin depender de la lectura visual de las barras.
+  String _semanticLabel() {
+    final parts = <String>[];
+    if (title != null) parts.add(title!);
+    if (subtitle != null) parts.add(subtitle!);
+    if (data.isEmpty) {
+      parts.add(emptyMessage);
+    } else {
+      final values = data
+          .map((d) => '${d.label}: ${d.value.round()}')
+          .join(', ');
+      parts.add('Valores de menos reciente a más reciente: $values');
+    }
+    return parts.join('. ');
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (title != null) ...[
-          Text(title!, style: AppTextStyles.h2),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(subtitle!, style: AppTextStyles.caption),
+    return Semantics(
+      label: _semanticLabel(),
+      container: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null) ...[
+            Text(title!, style: AppTextStyles.h2),
+            if (subtitle != null) ...[
+              const SizedBox(height: 4),
+              Text(subtitle!, style: _caption16),
+            ],
+            const SizedBox(height: 12),
           ],
-          const SizedBox(height: 12),
+          if (data.isEmpty)
+            Text(emptyMessage, style: AppTextStyles.body)
+          else
+            ExcludeSemantics(child: _buildBars()),
         ],
-        if (data.isEmpty)
-          Text(emptyMessage, style: AppTextStyles.body)
-        else
-          _buildBars(),
-      ],
+      ),
     );
   }
 
@@ -89,7 +115,7 @@ class BarChartSimple extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text(d.value.round().toString(), style: AppTextStyles.caption),
+          Text(d.value.round().toString(), style: _caption16),
           const SizedBox(height: 4),
           Expanded(
             child: Align(
@@ -110,7 +136,7 @@ class BarChartSimple extends StatelessWidget {
           Text(
             d.label,
             textAlign: TextAlign.center,
-            style: AppTextStyles.caption,
+            style: _caption16,
           ),
         ],
       ),
@@ -125,7 +151,7 @@ class BarChartSimple extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           // Espacio reservado para alinear con las barras que sí muestran valor.
-          Text(' ', style: AppTextStyles.caption),
+          Text(' ', style: _caption16),
           const SizedBox(height: 4),
           Expanded(
             child: Align(
@@ -146,7 +172,7 @@ class BarChartSimple extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(' ', textAlign: TextAlign.center, style: AppTextStyles.caption),
+          Text(' ', textAlign: TextAlign.center, style: _caption16),
         ],
       ),
     );
