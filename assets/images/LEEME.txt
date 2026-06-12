@@ -1,3 +1,0 @@
-Coloca aquí los PNG opcionales de las cartas del juego Memory.
-Nombres sugeridos (minúsculas, sin tildes): manzana.png, perro.png, etc.
-La app funciona sin imágenes: si falta el PNG, la carta muestra el nombre en texto.
