@@ -1,15 +1,17 @@
-/// Opciones de tamaño de texto (§3.2). Factores 0.9 / 1.0 / 1.2.
+/// Opciones de tamaño de texto (§3.2).
+/// Factores calculados para que el texto más pequeño (caption, base 18px)
+/// quede en 14 / 18 / 20 px: 14/18, 1.0, 20/18.
 enum TextSizeOption { small, normal, large }
 
 extension TextSizeOptionX on TextSizeOption {
   double get factor {
     switch (this) {
       case TextSizeOption.small:
-        return 0.9;
+        return 14 / 18;
       case TextSizeOption.normal:
         return 1.0;
       case TextSizeOption.large:
-        return 1.2;
+        return 20 / 18;
     }
   }
 

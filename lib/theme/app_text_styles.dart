@@ -44,7 +44,7 @@ class AppTextStyles {
       );
 
   static TextStyle get caption => GoogleFonts.nunito(
-        fontSize: 14,
+        fontSize: 18,
         fontWeight: FontWeight.w400,
         height: _height,
         color: AppColors.textMain,

@@ -152,14 +152,14 @@ class _StatsScreenState extends State<StatsScreen> {
           const _SectionLabel('EVOLUCIÓN POR JUEGO'),
           const SizedBox(height: 12),
           currentGame,
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // --- Zona inferior: datos de contexto + flechas para cambiar demo ---
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _NavArrowButton(
-                icon: Icons.chevron_left,
+                icon: Icons.arrow_circle_left,
                 tooltip: 'Demo anterior',
                 onPressed: () => setState(() {
                   _gameIndex = (_gameIndex - 1 + games.length) % games.length;
@@ -168,16 +168,25 @@ class _StatsScreenState extends State<StatsScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: AppCard(
-                  child: Row(
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: Text('Partidas completadas',
-                            style: AppTextStyles.body),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text('Partidas completadas',
+                                style: AppTextStyles.body),
+                          ),
+                          Text(
+                            '$totalGames',
+                            style: AppTextStyles.h2
+                                .copyWith(color: AppColors.primary),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        '$totalGames',
-                        style:
-                            AppTextStyles.h2.copyWith(color: AppColors.primary),
+                        'Demo ${_gameIndex + 1} / ${games.length}',
+                        style: AppTextStyles.caption,
                       ),
                     ],
                   ),
@@ -185,20 +194,13 @@ class _StatsScreenState extends State<StatsScreen> {
               ),
               const SizedBox(width: 8),
               _NavArrowButton(
-                icon: Icons.chevron_right,
+                icon: Icons.arrow_circle_right,
                 tooltip: 'Demo siguiente',
                 onPressed: () => setState(() {
                   _gameIndex = (_gameIndex + 1) % games.length;
                 }),
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              '${_gameIndex + 1} / ${games.length}',
-              style: AppTextStyles.caption.copyWith(fontSize: 16),
-            ),
           ),
           const SizedBox(height: 8),
         ],
@@ -225,7 +227,7 @@ class _NavArrowButton extends StatelessWidget {
     return IconButton(
       onPressed: onPressed,
       icon: Icon(icon),
-      iconSize: AppDimens.minIcon,
+      iconSize: AppDimens.minIcon + 8, // más grande = trazo más visible
       color: AppColors.primary,
       tooltip: tooltip,
       constraints: const BoxConstraints(
@@ -246,7 +248,6 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       label,
       style: AppTextStyles.caption.copyWith(
-        fontSize: 16, // mínimo accesible (WCAG 2.2)
         color: AppColors.textMain.withValues(alpha: 0.5),
         fontWeight: FontWeight.w700,
         letterSpacing: 1.2,
@@ -293,21 +294,25 @@ class _StreakStatCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             ExcludeSemantics(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text('$value', style: AppTextStyles.h1),
-                  const SizedBox(width: 6),
-                  Text(value == 1 ? 'día' : 'días', style: AppTextStyles.body),
-                ],
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text('$value', style: AppTextStyles.h1),
+                    const SizedBox(width: 6),
+                    Text(value == 1 ? 'día' : 'días', style: AppTextStyles.body),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 4),
             ExcludeSemantics(
               child: Text(
                 label,
-                style: AppTextStyles.caption.copyWith(fontSize: 16),
+                style: AppTextStyles.caption,
               ),
             ),
           ],
@@ -368,7 +373,7 @@ class _GameStatCard extends StatelessWidget {
                     ),
                     Text(
                       subtitle,
-                      style: AppTextStyles.caption.copyWith(fontSize: 16),
+                      style: AppTextStyles.caption,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

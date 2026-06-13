@@ -224,7 +224,7 @@ class _StreakCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 56,
@@ -238,34 +238,38 @@ class _StreakCard extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'TU RACHA',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textMain.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${streak.current} ${streak.current == 1 ? 'día' : 'días'} seguidos',
-                      style: AppTextStyles.h1,
-                    ),
-                  ],
+                child: Text(
+                  'TU RACHA',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textMain.withValues(alpha: 0.5),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text('Mejor: ${streak.max}', style: AppTextStyles.caption),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '${streak.current} ${streak.current == 1 ? 'día' : 'días'} seguidos',
+              style: AppTextStyles.h1,
+              maxLines: 1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text('Mejor: ${streak.max}', style: AppTextStyles.caption),
+            ),
           ),
           const SizedBox(height: 16),
           const Divider(color: AppColors.hairline, height: 1),

@@ -38,11 +38,6 @@ class BarChartSimple extends StatelessWidget {
     this.fixedMax,
   });
 
-  /// Tamaño mínimo de fuente accesible (WCAG 2.2): 16 px, en vez del
-  /// caption (14 px) usado en el resto de la app.
-  static TextStyle get _caption16 =>
-      AppTextStyles.caption.copyWith(fontSize: 16);
-
   /// Descripción textual del gráfico para lectores de pantalla, que resume
   /// los valores mostrados sin depender de la lectura visual de las barras.
   String _semanticLabel() {
@@ -72,7 +67,7 @@ class BarChartSimple extends StatelessWidget {
             Text(title!, style: AppTextStyles.h2),
             if (subtitle != null) ...[
               const SizedBox(height: 4),
-              Text(subtitle!, style: _caption16),
+              Text(subtitle!, style: AppTextStyles.caption),
             ],
             const SizedBox(height: 12),
           ],
@@ -115,7 +110,7 @@ class BarChartSimple extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text(d.value.round().toString(), style: _caption16),
+          Text(d.value.round().toString(), style: AppTextStyles.caption),
           const SizedBox(height: 4),
           Expanded(
             child: Align(
@@ -136,7 +131,7 @@ class BarChartSimple extends StatelessWidget {
           Text(
             d.label,
             textAlign: TextAlign.center,
-            style: _caption16,
+            style: AppTextStyles.caption,
           ),
         ],
       ),
@@ -151,7 +146,7 @@ class BarChartSimple extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           // Espacio reservado para alinear con las barras que sí muestran valor.
-          Text(' ', style: _caption16),
+          Text(' ', style: AppTextStyles.caption),
           const SizedBox(height: 4),
           Expanded(
             child: Align(
@@ -172,7 +167,7 @@ class BarChartSimple extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(' ', textAlign: TextAlign.center, style: _caption16),
+          Text(' ', textAlign: TextAlign.center, style: AppTextStyles.caption),
         ],
       ),
     );
