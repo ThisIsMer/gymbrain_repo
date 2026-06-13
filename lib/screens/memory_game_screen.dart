@@ -56,6 +56,19 @@ class _MemoryGameScreenState extends State<MemoryGameScreen> {
   void initState() {
     super.initState();
     _initGame();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _precacheImages());
+  }
+
+  Future<void> _precacheImages() async {
+    final ids = _cards.map((c) => c.item.id).toSet();
+    for (final id in ids) {
+      if (!mounted) return;
+      await precacheImage(
+        AssetImage('assets/images/$id.png'),
+        context,
+        size: const Size(300, 300),
+      );
+    }
   }
 
   void _initGame() {
@@ -379,6 +392,7 @@ class _CardTile extends StatelessWidget {
             child: Image.asset(
               'assets/images/${card.item.id}.png',
               fit: BoxFit.contain,
+              cacheWidth: 300,
               errorBuilder: (context, error, stack) {
                 // Fallback: nombre del elemento en Nunito Bold.
                 return Center(
