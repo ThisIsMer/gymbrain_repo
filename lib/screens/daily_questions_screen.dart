@@ -12,7 +12,8 @@ import '../widgets/app_scaffold.dart';
 import '../widgets/primary_button.dart';
 import 'daily_result_screen.dart';
 
-/// Preguntas diarias (§8). 3 preguntas; "No me acuerdo" no rompe la racha.
+/// Preguntas diarias (§8). 3 preguntas; "No lo sé" en cualquiera de ellas
+/// reinicia la racha diaria.
 class DailyQuestionsScreen extends StatefulWidget {
   const DailyQuestionsScreen({super.key});
 
@@ -25,6 +26,7 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
   late final List<ResolvedQuestion> _questions;
   final TextEditingController _controller = TextEditingController();
   int _index = 0;
+  bool _forgotAny = false;
 
   @override
   void initState() {
@@ -42,6 +44,7 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
   ResolvedQuestion get _current => _questions[_index];
 
   Future<void> _save({required bool remembered}) async {
+    if (!remembered) _forgotAny = true;
     final text = remembered ? _controller.text.trim() : null;
     final answer = DailyAnswer(
       dayIso: _progress.todayIso(),
@@ -63,8 +66,10 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
 
   Future<void> _finish() async {
     final alreadyDone = _progress.dailyDoneToday();
-    final StreakData streak = await _progress.completeDailyRoutine();
-    final isBest = streak.current >= streak.max && !alreadyDone;
+    final StreakData streak =
+        await _progress.completeDailyRoutine(forgot: _forgotAny);
+    final isBest =
+        !_forgotAny && streak.current >= streak.max && !alreadyDone;
 
     // Mensaje: positivo + (ocasional) consejo de salud.
     final tip = _progress.randomHealthTip();

@@ -71,14 +71,18 @@ class ProgressService {
   bool dailyDoneToday() => loadStreak().lastDayIso == todayIso();
 
   /// Aplica la lógica de racha (§3.3) al completar la rutina del día.
-  /// Devuelve la racha resultante (para la pantalla de resultado).
-  Future<StreakData> completeDailyRoutine() async {
+  /// Si [forgot] es true (se pulsó "No lo sé" en alguna pregunta), la racha
+  /// se reinicia. Devuelve la racha resultante (para la pantalla de resultado).
+  Future<StreakData> completeDailyRoutine({bool forgot = false}) async {
     final s = loadStreak();
     final today = todayIso();
     final yesterday = _isoOffset(1);
 
     if (s.lastDayIso == today) {
       return s; // ya contó hoy
+    } else if (forgot) {
+      s.current = 0;
+      s.consecutiveDays = 0;
     } else if (s.lastDayIso == yesterday) {
       s.current += 1;
       s.consecutiveDays += 1;
@@ -317,15 +321,23 @@ class ProgressService {
         : ComparisonOutcome.neutral;
   }
 
-  /// Number: menor tiempo medio = mejor, frente al mejor previo.
+  /// Number: más aciertos = mejor; con los mismos aciertos, menor tiempo
+  /// medio = mejor. Frente a la mejor sesión previa.
   ComparisonOutcome compareNumber(NumberSession current) {
     final pool = loadNumberSessions().where((s) => s != current).toList();
     if (pool.isEmpty) return ComparisonOutcome.firstTime;
-    final best =
-        pool.map((s) => s.avgReactionMs).reduce((a, b) => a < b ? a : b);
-    return current.avgReactionMs < best
+    final best = pool.reduce(
+        (a, b) => _isBetterNumberSession(b, a) ? b : a);
+    return _isBetterNumberSession(current, best)
         ? ComparisonOutcome.improved
         : ComparisonOutcome.neutral;
+  }
+
+  /// `true` si [a] es mejor que [b]: prioriza más aciertos y, en caso de
+  /// empate, menor tiempo medio de reacción.
+  bool _isBetterNumberSession(NumberSession a, NumberSession b) {
+    if (a.hits != b.hits) return a.hits > b.hits;
+    return a.avgReactionMs < b.avgReactionMs;
   }
 
   // --- Restablecer progreso -------------------------------------------------
