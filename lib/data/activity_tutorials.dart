@@ -48,7 +48,7 @@ final ActivityTutorial memoryTutorial = ActivityTutorial(
 /// Demo 2 — Reconstruye la frase (§6).
 final ActivityTutorial sentenceTutorial = ActivityTutorial(
   id: kTutSentence,
-  title: 'Simón dice',
+  title: 'Reconstruye la frase',
   pages: [
     const TutorialPage(
       icon: Icons.menu_book_outlined,

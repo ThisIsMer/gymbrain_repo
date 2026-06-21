@@ -12,8 +12,8 @@ import '../widgets/app_scaffold.dart';
 import '../widgets/primary_button.dart';
 import 'daily_result_screen.dart';
 
-/// Preguntas diarias (§8). 3 preguntas; "No lo sé" en cualquiera de ellas
-/// reinicia la racha diaria.
+/// Preguntas diarias (§8). 3 o más preguntas según la racha; "No lo sé" en
+/// cualquiera de ellas reinicia la racha diaria.
 class DailyQuestionsScreen extends StatefulWidget {
   const DailyQuestionsScreen({super.key});
 
@@ -89,6 +89,7 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
         builder: (_) => DailyResultScreen(
           streakDays: streak.current,
           isBest: isBest,
+          failed: _forgotAny,
           message: message,
           hits: hits,
           total: _questions.length,
@@ -99,10 +100,6 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hint = _progress.retrospectiveHint(
-      _current.questionId,
-      _current.dayOffset,
-    );
     final canConfirm = _controller.text.trim().isNotEmpty;
 
     return AppScaffold(
@@ -145,17 +142,6 @@ class _DailyQuestionsScreenState extends State<DailyQuestionsScreen> {
                 ],
               ),
             ),
-            if (hint != null) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(hint, style: AppTextStyles.caption),
-              ),
-            ],
             const SizedBox(height: 24),
             Text(
               'Tu respuesta',

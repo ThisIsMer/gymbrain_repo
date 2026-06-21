@@ -10,6 +10,7 @@ import '../widgets/primary_button.dart';
 class DailyResultScreen extends StatelessWidget {
   final int streakDays;
   final bool isBest;
+  final bool failed;
   final String message;
   final int hits;
   final int total;
@@ -18,6 +19,7 @@ class DailyResultScreen extends StatelessWidget {
     super.key,
     required this.streakDays,
     required this.isBest,
+    required this.failed,
     required this.message,
     required this.hits,
     required this.total,
@@ -25,12 +27,20 @@ class DailyResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final perfect = total > 0 && hits == total;
-    final title = perfect ? '¡Excelente!' : '¡Buen trabajo!';
-    final subtitle = perfect
-        ? 'Has acertado todas las preguntas de hoy. Vuelve mañana para '
-            'mantener tu racha.'
-        : message;
+    final perfect = !failed && total > 0 && hits == total;
+    final String title;
+    final String subtitle;
+    if (failed) {
+      title = 'No te preocupes';
+      subtitle = 'Mañana lo harás mejor. La constancia es lo que importa.';
+    } else if (perfect) {
+      title = '¡Excelente!';
+      subtitle = 'Has acertado todas las preguntas de hoy. Vuelve mañana para '
+          'mantener tu racha.';
+    } else {
+      title = '¡Buen trabajo!';
+      subtitle = message;
+    }
 
     return PopScope(
       canPop: false,
@@ -46,11 +56,15 @@ class DailyResultScreen extends StatelessWidget {
               child: Container(
                 width: 100,
                 height: 100,
-                decoration: const BoxDecoration(
-                  color: AppColors.success,
+                decoration: BoxDecoration(
+                  color: failed ? AppColors.error : AppColors.success,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check, color: AppColors.onPrimary, size: 48),
+                child: Icon(
+                  failed ? Icons.sentiment_neutral : Icons.check,
+                  color: AppColors.onPrimary,
+                  size: 48,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -78,11 +92,11 @@ class DailyResultScreen extends StatelessWidget {
                     height: 56,
                     child: VerticalDivider(color: AppColors.hairline, width: 1),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: _StatColumn(
-                      value: '+1',
-                      label: 'DÍA DE RACHA',
-                      color: AppColors.secondary,
+                      value: failed ? '0' : '+1',
+                      label: failed ? 'RACHA REINICIADA' : 'DÍA DE RACHA',
+                      color: failed ? AppColors.error : AppColors.secondary,
                     ),
                   ),
                 ],

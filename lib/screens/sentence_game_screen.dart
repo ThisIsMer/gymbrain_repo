@@ -240,7 +240,7 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => ActivityResultScreen(
-          title: 'Simón dice',
+          title: 'Reconstruye la frase',
           metrics: [
             'Frases correctas: $_correctSentences de $_totalSentences',
             'Palabras bien colocadas: ${session.wordsCorrectPercent.round()}%',
@@ -288,7 +288,7 @@ class _SentenceGameScreenState extends State<SentenceGameScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ActivityTopBar(
-                    title: 'Simón dice',
+                    title: 'Reconstruye la frase',
                     onBack: () => Navigator.of(context).pop(),
                     onPause: _openPause,
                   ),

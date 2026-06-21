@@ -152,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 12),
                     _ActionCard(
                       icon: Icons.short_text_outlined,
-                      title: 'Simón dice',
+                      title: 'Reconstruye la frase',
                       subtitle: 'Reconstruye la frase que leíste',
                       onTap: () => _goActivity(
                           sentenceTutorial, const SentenceGameScreen()),

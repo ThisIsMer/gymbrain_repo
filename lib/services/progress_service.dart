@@ -60,7 +60,19 @@ class ProgressService {
 
   StreakData loadStreak() {
     final json = _storage.getJsonMap(StorageService.kStreak);
-    return json != null ? StreakData.fromJson(json) : StreakData.empty();
+    final s = json != null ? StreakData.fromJson(json) : StreakData.empty();
+    // Si la última rutina no fue hoy ni ayer, la racha expira automáticamente.
+    final today = todayIso();
+    final yesterday = _isoOffset(1);
+    if (s.current > 0 &&
+        s.lastDayIso != null &&
+        s.lastDayIso != today &&
+        s.lastDayIso != yesterday) {
+      s.current = 0;
+      s.consecutiveDays = 0;
+      _saveStreak(s);
+    }
+    return s;
   }
 
   Future<void> _saveStreak(StreakData s) async {
@@ -125,72 +137,31 @@ class ProgressService {
     return count.clamp(0, 3);
   }
 
-  /// Profundidad temporal de las preguntas de hoy (§8.2). Cap a 3.
+  /// Profundidad temporal de las preguntas de hoy (§8.2). Cap a 6.
   int currentDepth() {
     final consec = loadStreak().consecutiveDays;
     final depth = 1 + (consec ~/ 3);
-    return depth.clamp(1, 3);
+    return depth.clamp(1, 6);
   }
 
-  /// Resuelve las 3 preguntas del día según la profundidad (§8.2).
-  /// Reparto: depth1 = 3 hoy; depth2 = 1 hoy + 2 ayer; depth3 = 1 hoy + 1 ayer
-  /// + 1 anteayer.
+  /// Resuelve las preguntas del día según la profundidad (§8.2).
+  /// depth1 = 3 preguntas sobre hoy. depth>=2 = una pregunta por cada día
+  /// desde hoy (offset 0) hasta hace `depth` días, acumulando un día más
+  /// cada vez, hasta cubrir 7 días distintos (offsets 0..6).
   List<ResolvedQuestion> resolveDailyQuestions() {
     final depth = currentDepth();
-    final wakeup = dailyQuestionDefs[0];
-    final lunch = dailyQuestionDefs[1];
-    final afternoon = dailyQuestionDefs[2];
+    final List<int> offsets =
+        depth == 1 ? [0, 0, 0] : List.generate(depth + 1, (i) => i);
 
-    String textFor(DailyQuestionDef def, int offset) {
-      switch (offset) {
-        case 2:
-          return def.dayBefore;
-        case 1:
-          return def.yesterday;
-        case 0:
-        default:
-          return def.today;
-      }
-    }
-
-    final List<int> offsets;
-    switch (depth) {
-      case 3:
-        offsets = [0, 1, 2];
-        break;
-      case 2:
-        offsets = [0, 1, 1];
-        break;
-      case 1:
-      default:
-        offsets = [0, 0, 0];
-    }
-
-    final defs = [wakeup, lunch, afternoon];
-    return List.generate(3, (i) {
+    return List.generate(offsets.length, (i) {
+      final def = dailyQuestionDefs[i % dailyQuestionDefs.length];
+      final offset = offsets[i];
       return ResolvedQuestion(
-        questionId: defs[i].id,
-        text: textFor(defs[i], offsets[i]),
-        dayOffset: offsets[i],
+        questionId: def.id,
+        text: def.textFor(offset),
+        dayOffset: offset,
       );
     });
-  }
-
-  /// Contraste retrospectivo suave (§8.3): respuesta guardada de un día
-  /// pasado, si existe y fue recordada con texto.
-  String? retrospectiveHint(String questionId, int dayOffset) {
-    if (dayOffset == 0) return null;
-    final targetIso = _isoOffset(dayOffset);
-    final answers = loadDailyAnswers();
-    for (final a in answers) {
-      if (a.dayIso == targetIso &&
-          a.questionId == questionId &&
-          a.remembered &&
-          (a.text?.trim().isNotEmpty ?? false)) {
-        return 'El otro día anotaste: «${a.text!.trim()}».';
-      }
-    }
-    return null;
   }
 
   // --- Sesiones: Memory -----------------------------------------------------

@@ -102,7 +102,7 @@ class _StatsScreenState extends State<StatsScreen> {
       ),
       _GameStatCard(
         icon: Icons.short_text_outlined,
-        title: 'Simón dice',
+        title: 'Reconstruye la frase',
         subtitle: 'Mejor acierto',
         value: bestSentence,
         data: sentenceData,
