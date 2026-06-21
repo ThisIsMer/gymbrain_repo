@@ -17,7 +17,7 @@ claro.
 ## Estructura
 ```
 lib/
-  theme/        Tokens de diseño (colores, tipografías, dimensiones, tema)
+  theme/        Plantillas de diseño (colores, tipografías, dimensiones, tema)
   models/       Modelos de datos y de sesión
   data/         Bancos de contenido (memory, frases, preguntas, consejos)
   services/     Almacenamiento, ajustes y lógica de progreso/racha
